@@ -1,0 +1,119 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const reporter = {
+  info: vi.fn(),
+  notice: vi.fn(),
+  warning: vi.fn(),
+  error: vi.fn(),
+  fail: vi.fn(),
+  annotate: vi.fn(),
+};
+
+const readInputs = vi.fn();
+const getOctokit = vi.fn();
+const countApprovals = vi.fn();
+const listChangedFiles = vi.fn();
+const listRepoFiles = vi.fn();
+const readRepoFileContents = vi.fn();
+const collectRepoRequirements = vi.fn();
+const requirePullRequestContext = vi.fn();
+
+vi.mock('../../src/action/inputs', () => ({
+  readInputs,
+}));
+
+vi.mock('../../src/action/reporter', () => ({
+  createGitHubReporter: () => reporter,
+}));
+
+vi.mock('@actions/github', () => ({
+  context: {},
+  getOctokit,
+}));
+
+vi.mock('../../src/facts/approvals', () => ({
+  countApprovals,
+}));
+
+vi.mock('../../src/facts/changed-files', () => ({
+  listChangedFiles,
+}));
+
+vi.mock('../../src/facts/repo-files', () => ({
+  collectRepoRequirements,
+  listRepoFiles,
+  readRepoFileContents,
+}));
+
+vi.mock('../../src/facts/github-context', () => ({
+  requirePullRequestContext,
+}));
+
+describe('main', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('runs the action end-to-end with mocked GitHub facts', async () => {
+    process.env['GITHUB_WORKSPACE'] = '/tmp/workspace';
+    process.env['GITHUB_TOKEN'] = 'token';
+    process.env['RUNNER_TEMP'] = '/tmp';
+
+    readInputs.mockReturnValue({ failOnWarn: false });
+    getOctokit.mockReturnValue({ client: true });
+    requirePullRequestContext.mockReturnValue({
+      owner: 'acme',
+      repo: 'demo',
+      number: 12,
+      title: 'Deploy change',
+      body: 'Includes rollback guidance',
+      labels: ['infra'],
+      requestedReviewers: ['platform'],
+    });
+    listChangedFiles.mockResolvedValue({
+      all: ['.github/workflows/deploy.yml'],
+      added: [],
+      removed: [],
+      renamed: [],
+    });
+    collectRepoRequirements.mockReturnValue({
+      needsRepoFiles: true,
+      fileContentGlobs: ['docs/**/*.md'],
+    });
+    listRepoFiles.mockResolvedValue(['docs/runbooks/deploy.md']);
+    readRepoFileContents.mockResolvedValue({
+      'docs/runbooks/deploy.md': 'Rollback guidance',
+    });
+    countApprovals.mockResolvedValue(2);
+
+    const { main } = await import('../../src/action/main');
+    await main();
+
+    expect(getOctokit).toHaveBeenCalledWith('token');
+    expect(listChangedFiles).toHaveBeenCalled();
+    expect(countApprovals).toHaveBeenCalled();
+    expect(reporter.fail).not.toHaveBeenCalled();
+    expect(reporter.info).toHaveBeenCalledWith(
+      expect.stringContaining('Policy summary:'),
+    );
+  });
+
+  it('fails cleanly when no GitHub token is available', async () => {
+    readInputs.mockReturnValue({ failOnWarn: false });
+
+    const { main } = await import('../../src/action/main');
+    await main();
+
+    expect(reporter.fail).toHaveBeenCalledWith(
+      expect.stringMatching(/github-token input is required/i),
+    );
+  });
+});

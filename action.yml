@@ -1,0 +1,19 @@
+name: github-policy-gate
+description: Policy as code for safer software delivery in GitHub CI.
+author: OWNER
+inputs:
+  config-path:
+    description: Path to the policy config file.
+    required: false
+    default: .github/policy-gate.yml
+  github-token:
+    description: GitHub token used to read pull request facts.
+    required: false
+    default: ${{ github.token }}
+  fail-on-warn:
+    description: Fail the job when warning policies are violated.
+    required: false
+    default: 'false'
+runs:
+  using: node20
+  main: dist/index.js
