@@ -1,0 +1,106 @@
+# github-policy-gate example configuration
+# Copy this file to .github/policy-gate.yml and adapt the policies you need.
+
+policies:
+  - id: queue-change-requires-tests
+    description: Queue or store changes must include tests or failure-mode docs.
+    severity: error
+    when:
+      changed:
+        - "runtime/queue/**"
+        - "runtime/store/**"
+    require:
+      any:
+        - changed:
+            - "tests/**"
+        - changed:
+            - "failure_modes/**"
+    message: "Queue/store changes require tests or failure-mode updates."
+
+  - id: public-api-change-needs-changelog
+    description: Public API changes require a changelog update or exemption label.
+    severity: warn
+    when:
+      changed:
+        - "api/public/**"
+    require:
+      any:
+        - changed:
+            - "CHANGELOG.md"
+        - has_label:
+            - "release-note-exempt"
+    message: "Public API changes should include a changelog update or exemption label."
+
+# Feature examples
+#
+# `exists(globs)`
+# - id: readme-must-exist
+#   severity: warn
+#   require:
+#     exists:
+#       - "README.md"
+#   message: "This repository should keep a README."
+#
+# `pr_text(patterns)`
+# - id: deploy-change-needs-rollback-text
+#   severity: warn
+#   when:
+#     changed:
+#       - ".github/workflows/**"
+#   require:
+#     pr_text:
+#       - "rollback"
+#       - "runbook"
+#   message: "Workflow changes should mention rollback or runbook context in the PR body."
+#
+# `title(patterns)`
+# - id: release-title-format
+#   severity: warn
+#   when:
+#     changed:
+#       - "api/public/**"
+#   require:
+#     title:
+#       - "^release:"
+#   message: "Public API changes should use a release-oriented PR title."
+#
+# `approval_count_at_least(n)`
+# - id: auth-needs-approvals
+#   severity: error
+#   when:
+#     changed:
+#       - "auth/**"
+#       - "infra/**"
+#   require:
+#     approval_count_at_least: 2
+#   message: "Auth or infra changes require at least two approvals."
+#
+# `file_contains(globs, patterns)`
+# - id: runbook-must-mention-rollback
+#   severity: warn
+#   when:
+#     changed:
+#       - ".github/workflows/**"
+#   require:
+#     file_contains:
+#       globs:
+#         - "docs/runbooks/**/*.md"
+#       patterns:
+#         - "rollback"
+#         - "abort"
+#   message: "Workflow changes should be backed by a runbook that mentions rollback."
+#
+# `all` and `not`
+# - id: deploy-label-required-unless-exempt
+#   severity: warn
+#   when:
+#     all:
+#       - changed:
+#           - ".github/workflows/**"
+#       - not:
+#           has_label:
+#             - "policy-exempt"
+#   require:
+#     has_label:
+#       - "deploy-change"
+#   message: "Workflow changes should carry a deploy-change label unless policy-exempt."
