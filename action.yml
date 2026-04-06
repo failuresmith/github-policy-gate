@@ -1,6 +1,6 @@
 name: github-policy-gate
 description: Policy as code for safer software delivery in GitHub CI.
-author: OWNER
+author: failuresmith
 inputs:
   config-path:
     description: Path to the policy config file.
