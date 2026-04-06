@@ -69,4 +69,4 @@ make build
 
 ## Release
 
-Tag a version like `v1.0.0` to run the release workflow. The repository uses PolyForm Noncommercial 1.0.0.
+Keep `main` source-only. To publish, run the `release` workflow manually from `main`. The workflow reads the version from `package.json`, validates the repo, creates a release commit on the dedicated `release` branch with `dist/index.js`, tags `vX.Y.Z`, and moves `vX` so consumers can keep using `uses: failuresmith/github-policy-gate@v1`. The repository uses PolyForm Noncommercial 1.0.0.

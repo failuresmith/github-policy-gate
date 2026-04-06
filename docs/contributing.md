@@ -20,6 +20,7 @@ make build
 
 ## Release flow
 
-1. Run `make check`.
-2. Tag a version like `v1.0.0`.
-3. Let the release workflow build and publish the release.
+1. Merge the intended changes to `main`.
+2. Update `package.json` to the release version before merge.
+3. Run the `release` workflow manually from `main`.
+4. The workflow reads the version from `package.json`, validates source, creates a release commit on `release`, tags `vX.Y.Z`, and moves `vX`.
