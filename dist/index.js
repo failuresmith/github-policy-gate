@@ -4199,7 +4199,7 @@ var require_util2 = __commonJS({
           return referrerOrigin;
         }
         case "strict-origin":
-         
+        // eslint-disable-line
         /**
            * 1. If referrerURL is a potentially trustworthy URL and
            * request’s current URL is not a potentially trustworthy URL,
@@ -4207,7 +4207,7 @@ var require_util2 = __commonJS({
            * 2. Return referrerOrigin
           */
         case "no-referrer-when-downgrade":
-         
+        // eslint-disable-line
         /**
          * 1. If referrerURL is a potentially trustworthy URL and
          * request’s current URL is not a potentially trustworthy URL,
@@ -5692,7 +5692,7 @@ var require_client_h1 = __commonJS({
       }
       return await WebAssembly.instantiate(mod, {
         env: {
-           
+          /* eslint-disable camelcase */
           wasm_on_url: (p, at, len) => {
             return 0;
           },
@@ -5728,7 +5728,7 @@ var require_client_h1 = __commonJS({
             assert(currentParser.ptr === p);
             return currentParser.onMessageComplete() || 0;
           }
-           
+          /* eslint-enable camelcase */
         }
       });
     }

@@ -182,9 +182,9 @@ unless there is a concrete, high-signal need.
 
 A change is not done unless the repo still supports:
 
-- `npm run check`
-- `npm run validate`
-- `npm run release-dry-run`
+- `pnpm run check`
+- `pnpm run validate`
+- `pnpm run release-dry-run`
 
 Coverage is part of the contract. Do not weaken it casually.
 

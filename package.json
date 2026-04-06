@@ -16,7 +16,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run clean && tsup --config tsup.config.ts",
+    "build": "pnpm run clean && tsup --config tsup.config.ts",
     "clean": "rm -rf build dist coverage .vitest",
     "compile": "tsc --outDir build",
     "lint": "mkdir -p build && eslint src tests scripts eslint.config.cjs",
@@ -28,11 +28,11 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "validate:config": "npm run compile && node scripts/validate-example-config.js",
-    "validate": "npm run validate:config",
-    "check": "npm run lint:ci && npm run format:check && npm run typecheck && npm run test && npm run coverage && npm run build",
-    "prepare": "npm run build",
-    "release-dry-run": "npm run build && npm pack --dry-run"
+    "validate:config": "pnpm run compile && node scripts/validate-example-config.js",
+    "validate": "pnpm run validate:config",
+    "check": "pnpm run lint:ci && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run coverage && pnpm run build",
+    "prepare": "pnpm run build",
+    "release-dry-run": "pnpm run build && pnpm pack --dry-run"
   },
   "keywords": [
     "github action",
