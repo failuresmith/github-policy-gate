@@ -1,0 +1,7 @@
+policies:
+  - id: required-self-test-label
+    severity: error
+    require:
+      has_label:
+        - 'policy-gate-self-test-required-label'
+    message: 'This fixture intentionally fails unless the special self-test label exists.'

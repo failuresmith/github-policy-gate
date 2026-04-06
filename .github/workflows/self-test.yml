@@ -1,0 +1,35 @@
+name: self-test
+
+on:
+  pull_request:
+
+jobs:
+  pass-case:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          github-token: ${{ github.token }}
+          config-path: tests/fixtures/self-test/pass.yml
+
+  fail-case:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - id: policy-gate
+        continue-on-error: true
+        uses: ./
+        with:
+          github-token: ${{ github.token }}
+          config-path: tests/fixtures/self-test/fail.yml
+      - if: steps.policy-gate.outcome != 'failure'
+        run: |
+          echo "Expected the failure fixture to fail."
+          exit 1
