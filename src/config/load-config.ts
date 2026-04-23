@@ -20,8 +20,8 @@ export interface LoadedConfig {
 }
 
 export interface LoadConfigOptions {
-  cwd?: string;
-  runnerTemp?: string;
+  cwd?: string | undefined;
+  runnerTemp?: string | undefined;
 }
 
 export async function loadConfig(
