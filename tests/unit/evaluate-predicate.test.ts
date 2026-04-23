@@ -48,7 +48,7 @@ describe('evaluatePredicate', () => {
         {
           all: [
             { changed: ['runtime/queue/**'] },
-            { any: [{ changed: ['docs/**'] }, { pr_text: ['rollback'] }] },
+            { any: [{ changed: ['docs/**'] }, { body: ['rollback'] }] },
           ],
         },
         facts,

@@ -18,7 +18,7 @@ const FILE_CONTAINS_KEYS = new Set(['globs', 'patterns']);
 const PREDICATE_KEYS = [
   'changed',
   'exists',
-  'pr_text',
+  'body',
   'title',
   'has_label',
   'approval_count_at_least',
@@ -104,7 +104,7 @@ function readPredicate(value: unknown, scope: string): PredicateExpression {
   switch (key) {
     case 'changed':
     case 'exists':
-    case 'pr_text':
+    case 'body':
     case 'title':
     case 'has_label':
       return {

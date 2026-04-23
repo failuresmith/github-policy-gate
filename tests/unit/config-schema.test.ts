@@ -57,6 +57,23 @@ describe('validateConfig', () => {
     expect(config.policies[0]?.when).toBeDefined();
   });
 
+  it('accepts body and title predicates', () => {
+    const config = validateConfig({
+      policies: [
+        {
+          id: 'text-check',
+          severity: 'warn',
+          require: {
+            any: [{ body: ['rollback'] }, { title: ['^fix:'] }],
+          },
+          message: 'Text check failed.',
+        },
+      ],
+    });
+
+    expect(config.policies).toHaveLength(1);
+  });
+
   it('rejects invalid severity values', () => {
     expect(() =>
       validateConfig({

@@ -5,7 +5,7 @@ import { evaluateChanged } from '../predicates/changed';
 import { evaluateExists } from '../predicates/exists';
 import { evaluateFileContains } from '../predicates/file-contains';
 import { evaluateHasLabel } from '../predicates/has-label';
-import { evaluatePrText } from '../predicates/pr-text';
+import { evaluateBody } from '../predicates/body';
 import { evaluateTitle } from '../predicates/title';
 
 import { combineAll, combineAny, combineNot } from './combinators';
@@ -22,8 +22,8 @@ export function evaluatePredicate(
   if ('exists' in predicate) {
     return evaluateExists(facts, predicate.exists);
   }
-  if ('pr_text' in predicate) {
-    return evaluatePrText(facts, predicate.pr_text);
+  if ('body' in predicate) {
+    return evaluateBody(facts, predicate.body);
   }
   if ('title' in predicate) {
     return evaluateTitle(facts, predicate.title);

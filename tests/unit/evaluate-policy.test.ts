@@ -26,7 +26,7 @@ describe('evaluatePolicy', () => {
       severity: 'error',
       when: { changed: ['.github/workflows/**'] },
       require: {
-        any: [{ changed: ['docs/runbooks/**'] }, { pr_text: ['rollback'] }],
+        any: [{ changed: ['docs/runbooks/**'] }, { body: ['rollback'] }],
       },
       message: 'Workflow changes require runbook evidence.',
     };

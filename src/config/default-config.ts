@@ -16,7 +16,7 @@ export function createDefaultPolicyConfig(): PolicyConfig {
         require: {
           any: [
             { changed: ['docs/runbooks/**'] },
-            { pr_text: ['runbook', 'rollback'] },
+            { body: ['runbook', 'rollback'] },
           ],
         },
         message:
@@ -58,7 +58,7 @@ export function renderDefaultPolicyConfig(): string {
     '      any:',
     '        - changed:',
     '            - "docs/runbooks/**"',
-    '        - pr_text:',
+    '        - body:',
     '            - "runbook"',
     '            - "rollback"',
     '    message: Workflow changes should include runbook or rollback evidence before merge.',

@@ -3,7 +3,7 @@ export type Severity = 'error' | 'warn';
 export type Predicate =
   | { changed: string[] }
   | { exists: string[] }
-  | { pr_text: string[] }
+  | { body: string[] }
   | { title: string[] }
   | { has_label: string[] }
   | { approval_count_at_least: number }
