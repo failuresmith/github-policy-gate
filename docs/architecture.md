@@ -1,23 +1,36 @@
 # Architecture
 
+## Workflow
+
+```mermaid
+graph LR
+    Input[Inputs] --> Action[Action Orchestrator]
+    Action --> Config[Config Loader]
+    Config --> Facts[Facts Provider]
+    Facts --> Engine[Policy Engine]
+    Engine --> Predicates[Predicates]
+    Engine --> Combinators[Combinators]
+    Engine --> Reporter[Result Reporter]
+```
+
 ## Flow
 
-1. Load and validate YAML config.
-2. Gather pull request facts and only the repository facts needed by the config.
-3. Evaluate simple predicates and combinators with pure functions.
-4. Emit annotations, warnings, errors, and a short log summary.
+1. **Load and Validate**: Load YAML config and validate against the schema. If missing, generate an advisory-only fallback.
+2. **Gather Facts**: Collect pull request facts (labels, files, etc.) and only the repository facts (file existence/content) required by the config.
+3. **Pure Evaluation**: Evaluate policies using pure functions. The engine combines predicates and combinators deterministically.
+4. **Report**: Emit GitHub annotations, warnings, errors, and a log summary.
 
 ## Modules
 
-- `src/config`: parsing, validation, safe default config
-- `src/facts`: PR files, approvals, local repository file reads
-- `src/predicates`: small fact checks
-- `src/engine`: pure policy evaluation
-- `src/action`: GitHub Action orchestration
+- `src/config`: Parsing, validation, and safe default config generation.
+- `src/facts`: PR metadata (via GitHub API) and local repository file access.
+- `src/predicates`: Individual rule implementations (e.g., "does file exist?").
+- `src/engine`: Core logic that evaluates full policies and combinators.
+- `src/action`: The "imperative shell" that orchestrates the GitHub Action lifecycle.
 
 ## Constraints
 
-- No bot, server, database, or external service
-- No AST parsing
-- No language-specific semantic analysis
-- Deterministic evaluation with explicit facts
+- **Pure Engine**: The core evaluation logic has no side effects and is easily testable.
+- **Minimal Footprint**: No external dependencies beyond the GitHub context and the local workspace.
+- **Low Noise**: Only reads repository files if explicitly requested by a policy.
+- **Advisory Fallback**: Never breaks a build due to a missing configuration file.

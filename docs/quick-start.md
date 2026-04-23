@@ -1,15 +1,17 @@
 # Quick Start
 
-## 1. Add the action
+Get your pull request guardrails up and running in minutes.
+
+## 1. Add the Workflow
+
+Create `.github/workflows/policy.yml` in your repository:
 
 ```yaml
 name: policy-gate
-
-on:
-  pull_request:
+on: [pull_request]
 
 jobs:
-  policy-gate:
+  check-policy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -17,33 +19,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: failuresmith/github-policy-gate@v1
-        with:
-          github-token: ${{ github.token }}
 ```
 
-## 2. Add a config
+## 2. Add the Policy Configuration
 
-Copy [`.github/policy-gate.yml.example`](../.github/policy-gate.yml.example) to `.github/policy-gate.yml`.
-
-Minimal starting point:
+Create `.github/policy-gate.yml` to define your rules:
 
 ```yaml
 policies:
-  - id: queue-change-requires-tests
+  - id: critical-path-tests
     severity: error
     when:
-      changed:
-        - 'runtime/queue/**'
+      changed: ['src/core/**']
     require:
-      changed:
-        - 'tests/**'
-    message: 'Queue changes require tests.'
+      changed: ['tests/**']
+    message: 'Changes to the core engine must include updated tests.'
+
+  - id: documentation-check
+    severity: warn
+    require:
+      changed: ['README.md', 'docs/**']
+    message: 'Consider updating documentation for this change.'
 ```
 
-## 3. Open a pull request
+## 3. Open a Pull Request
 
-The action reads pull request facts, evaluates every policy, prints a short summary, annotates violations, and fails only when `error` policies are violated.
+Once you push these files, the action will:
 
-## 4. Missing config behavior
+1. Gather PR facts (changed files, labels, title, etc.).
+2. Evaluate each policy against those facts.
+3. Provide a summary in the action logs.
+4. Add annotations to the PR for any violations.
+5. Fail the build if any `error` level policies are violated.
 
-If no config exists, the action generates a temporary advisory-only config under `RUNNER_TEMP`, logs the generated path, and keeps the job non-blocking.
+## Missing Config?
+
+Don't worry—if you add the action but forget the config file, `github-policy-gate` will generate a temporary advisory config. It won't block your PRs; it will just show you what an example configuration looks like in the logs.

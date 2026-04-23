@@ -1,67 +1,92 @@
 # Configuration Reference
 
-## File location
+The policy engine uses a YAML configuration file to define rules. By default, the action looks for `.github/policy-gate.yml`.
 
-Default path: `.github/policy-gate.yml`
+## Root level
 
-## Shape
+| Key        | Type       | Description                   |
+| :--------- | :--------- | :---------------------------- |
+| `policies` | `Policy[]` | List of policies to evaluate. |
+
+## Policy Shape
+
+Each policy defines when it applies and what it requires.
 
 ```yaml
 policies:
-  - id: string
-    description: string
-    severity: error | warn
-    when: predicate
-    require: predicate
-    message: string
+  - id: string # Required. Unique identifier for the policy.
+    description: string # Optional. A human-readable description.
+    severity: error|warn # Required. 'error' fails the build; 'warn' only annotates (unless fail-on-warn is true).
+    when: predicate # Optional. Conditions that must be met for the policy to apply.
+    require: predicate # Required. The rule that must be satisfied.
+    message: string # Required. The message displayed when the policy is violated.
 ```
-
-`when` is optional. If omitted, the policy always applies.
 
 ## Predicates
 
-### changed
+Predicates are the building blocks of policies. They evaluate to true or false based on pull request and repository facts.
+
+### `changed`
+
+Checks if any of the specified file patterns (globs) have changed in the pull request.
 
 ```yaml
 changed:
-  - 'src/**'
+  - 'src/**/*.ts'
+  - 'package.json'
 ```
 
-### exists
+### `exists`
+
+Checks if all of the specified file patterns exist in the repository at the current PR state.
 
 ```yaml
 exists:
-  - 'README.md'
+  - '.github/policy-gate.yml'
+  - 'CODEOWNERS'
 ```
 
-### pr_text
+### `body`
+
+Checks if the pull request **body** matches any of the specified regex patterns.
 
 ```yaml
-pr_text:
-  - 'rollback'
+body:
+  - 'fixes #\d+'
+  - 'runbook'
 ```
 
-### title
+### `title`
+
+Checks if the pull request **title** matches any of the specified regex patterns.
 
 ```yaml
 title:
-  - '^release:'
+  - '^feat:'
+  - '^fix:'
 ```
 
-### has_label
+### `has_label`
+
+Checks if the pull request carries any of the specified labels.
 
 ```yaml
 has_label:
-  - 'deploy-change'
+  - 'security-review'
+  - 'deploy-safe'
 ```
 
-### approval_count_at_least
+### `approval_count_at_least`
+
+Checks if the pull request has at least the specified number of approvals.
 
 ```yaml
 approval_count_at_least: 2
 ```
 
-### file_contains
+### `file_contains`
+
+Checks if specific files contain specific text patterns. This is a targeted check that only reads the requested files.
 
 ```yaml
 file_contains:
@@ -69,25 +94,50 @@ file_contains:
     - 'docs/runbooks/**/*.md'
   patterns:
     - 'rollback'
+    - 'recovery'
 ```
 
 ## Combinators
 
-### all
+Combinators allow you to build complex logic by combining predicates.
 
-Every child must pass.
+### `all`
 
-### any
+Passes only if **every** child predicate passes.
 
-At least one child must pass.
+```yaml
+require:
+  all:
+    - has_label: ['ready']
+    - approval_count_at_least: 1
+```
 
-### not
+### `any`
 
-Inverts a child predicate.
+Passes if **at least one** child predicate passes.
 
-## Validation rules
+```yaml
+require:
+  any:
+    - approval_count_at_least: 2
+    - has_label: ['fast-track']
+```
 
-- Unknown top-level and policy keys are rejected.
+### `not`
+
+Inverts the result of the child predicate.
+
+```yaml
+when:
+  not:
+    has_label: ['experimental']
+```
+
+## Validation Rules
+
+The configuration is strictly validated before execution:
+
+- Unknown top-level or policy keys are rejected.
 - Invalid severities are rejected.
 - Empty IDs, messages, and arrays are rejected.
 - Invalid predicate shapes are rejected.

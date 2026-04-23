@@ -1,212 +1,272 @@
 # github-policy-gate Agent Guide
 
-This repository is a **publishable GitHub Action for policy as code in pull request CI**.
+This repository is a GitHub Action for policy-as-code in pull request CI.
 
 If a proposed change does not make the action more useful, more reliable, easier to adopt, or easier to publish, do not make it.
 
-## Mission
+---
+
+## 1. Mission
 
 Build and maintain the smallest genuinely useful MVP for:
 
 `uses: failuresmith/github-policy-gate@v1`
 
-The action evaluates a YAML policy file against pull request facts and repository facts, then warns or fails with clear messages.
+The action evaluates a YAML policy file against pull request and repository facts, then warns or fails with clear messages.
 
-## Primary Objective
+---
 
-Help teams add PR guardrails with the least possible infrastructure:
+## 2. Product Objective
+
+Enable PR guardrails with minimal infrastructure:
 
 - no bot
 - no web service
 - no database
 - no GitHub App
-- no external dependency beyond GitHub and the checked-out repository
+- no external dependencies beyond GitHub and the checked-out repository
 
-The product should feel easy to trust, easy to read, and easy to adopt in any repository.
+The product must be:
+- easy to trust
+- easy to read
+- easy to adopt
 
-## Reward Function
+---
 
-Optimize for these outcomes, in this order:
+## 3. Decision Hierarchy (authoritative)
+
+When rules conflict, resolve in this order:
+
+1. Non-Negotiable Product Constraints
+2. Determinism Requirements
+3. Reward Function (priority order)
+4. Change Acceptance Criteria
+5. Engineering Priorities
+
+Lower levels must not violate higher levels.
+
+---
+
+## 4. Reward Function (optimization targets)
+
+Optimize for:
 
 1. Correct policy decisions
 2. Clear user-facing failure messages
-3. Safe, deterministic behavior in CI
+3. Deterministic CI behavior
 4. Low adoption friction
 5. Small, maintainable code
-6. Publishable action packaging
+6. Publishable packaging
 
-A good change increases one of those without materially hurting a higher-priority item.
+This defines *what to optimize*, not *what is allowed*.
 
-## Non-Negotiable Product Constraints
+---
 
-- This is a TypeScript GitHub Action, not a bot.
-- Keep the config DSL human-friendly YAML.
-- The policy engine is based on:
+## 5. Non-Negotiable Product Constraints
+
+- TypeScript GitHub Action (not a bot)
+- Human-readable YAML config
+- Policy engine model:
   - facts
   - simple predicates
   - composable combinators
-  - clear failure messages
-- Missing config must never hard-fail the repository by surprise.
-  - If `.github/policy-gate.yml` is missing, generate a temporary advisory-only config under `RUNNER_TEMP`.
-  - Do not write fallback config into the repository.
-- No AI features.
-- No AST parsing.
-- No language-specific semantic analysis.
-- No hidden network calls beyond GitHub API usage needed for PR facts.
+  - explicit failure messages
 
-## Current MVP Scope
+## Missing Config Behavior (authoritative)
 
-Supported facts:
+If `.github/policy-gate.yml` is missing:
 
-- changed files
-- added files
-- removed files
-- renamed files
-- PR title
-- PR body
+- If mode = advisory (default):
+  - run in advisory-only mode
+  - emit warning
+  - do not fail CI
+
+- If mode = enforce:
+  - fail CI with clear message
+
+### Disallowed
+
+- AI features
+- AST parsing
+- language-specific analysis
+- hidden network calls beyond required GitHub API usage
+
+---
+
+## 6. Determinism Requirements
+
+The action must produce identical results given:
+
+- same PR state
+- same repository state
+- same config
+
+Disallowed:
+
+- wall-clock time
+- unordered iteration where order affects results
+- non-pinned API assumptions
+
+All evaluation inputs must be:
+
+- fully materialized before execution
+- explicitly ordered where needed
+
+Tests must assert deterministic ordering.
+
+---
+
+## 7. MVP Scope (explicit surface area)
+
+### Facts
+
+- changed / added / removed / renamed files
+- PR title / body
 - labels
-- requested reviewers
-- approvals count
-- file existence in repo
-- file content for targeted files only
+- reviewers
+- approval count
+- file existence
+- targeted file content
 
-Supported predicates:
+### Predicates
 
 - `changed(globs)`
 - `exists(globs)`
-- `pr_text(patterns)`
+- `body(patterns)`
 - `title(patterns)`
 - `has_label(labels)`
 - `approval_count_at_least(n)`
 - `file_contains(globs, patterns)`
 
-Supported combinators:
+### Combinators
 
-- `all`
-- `any`
-- `not`
+- `all`, `any`, `not`
 
-If you want to add anything outside this list, require a strong reason tied to adoption or practical utility.
+### Expansion Rule
 
-## Engineering Priorities
+A new capability is allowed only if all are true:
 
-- TDD first for behavior changes
+- cannot be expressed with existing primitives
+- required in ≥2 independent real-world examples
+- reduces config or cognitive load
+- fits current mental model
+
+---
+
+## 8. Change Acceptance Criteria (single enforcement gate)
+
+A change is allowed only if:
+
+### Must improve at least one:
+
+- decision correctness (via tests)
+- message clarity (via expected outputs)
+- determinism
+- adoption friction
+- code size/complexity (net justified)
+
+### Must NOT:
+
+- add external dependencies
+- increase config surface area
+- reduce test coverage
+- introduce implicit behavior
+
+### Must include:
+
+- failing tests first (for behavior change)
+- updated docs if user-visible behavior changes
+
+---
+
+## 9. Tradeoff Rules
+
+- Never trade correctness for lower priorities
+- Determinism overrides performance
+- Clarity may justify small code increases
+- Adoption improvements must remain explicit
+- Code reduction must not reduce readability
+
+---
+
+## 10. Engineering Principles
+
+- TDD for behavior changes
 - strict TypeScript
-- deterministic pure core logic
-- imperative shell and GitHub API usage only at the edges
-- defense in depth and input validation
-- functions should stay small and single-purpose where practical
-- readability over cleverness
+- pure, deterministic core (`engine`, `predicates`)
+- side effects only at edges
+- targeted file reads (no full scans)
+- small, readable functions
 - minimal abstractions
 
-## Repository Map
+---
 
-- `src/action/`
-  - GitHub Action entrypoint, inputs, reporting, orchestration
-- `src/config/`
-  - config loading, fallback config, validation, schema
-- `src/facts/`
-  - GitHub PR facts and repository file facts
-- `src/predicates/`
-  - simple predicate evaluation
-- `src/engine/`
-  - pure predicate and policy evaluation
-- `src/utils/`
-  - low-level helpers only
-- `tests/unit/`
-  - behavior-level unit tests
-- `tests/integration/`
-  - end-to-end action flow tests
-- `tests/fixtures/`
-  - self-test fixture configs
-- `docs/`
-  - onboarding, configuration, examples, architecture, FAQ
-- `.github/workflows/`
-  - CI, self-test, release
+## 11. Error Messages = Product Surface
 
-## Change Rules
-
-### 1. Preserve the core product promise
-
-Changes must keep the action:
-
-- easy to adopt
-- easy to reason about
-- safe by default
-- publishable as a normal GitHub Action
-
-### 2. Test first for behavior changes
-
-For any behavior change:
-
-- add or modify tests first
-- prefer unit tests for engine logic
-- add integration tests for action orchestration or fallback behavior
-
-### 3. Keep the engine pure
-
-`src/engine/` and `src/predicates/` should remain deterministic and side-effect free.
-
-Do not leak GitHub API calls, filesystem mutation, or environment access into the core evaluator.
-
-### 4. Read only what is needed
-
-Repository scans and file reads must remain targeted:
-
-- avoid full file-content scans
-- only read contents for matched `file_contains` globs
-- short-circuit cheap checks before expensive ones when practical
-
-### 5. Error messages are product surface
-
-Treat policy messages, logs, and annotations as user-facing product behavior.
-
-They must be:
+All outputs must be:
 
 - concise
 - actionable
-- specific enough to explain why a policy failed
+- specific
 
-### 6. Avoid speculative expansion
+---
 
-Do not add:
+## 12. Anti-Goals
 
-- extra predicate types
-- outputs with no clear user value
-- extra packaging complexity
-- generalized frameworks
+Do not optimize for:
 
-unless there is a concrete, high-signal need.
+- general-purpose policy engines
+- extensibility frameworks
+- non-CI-scale performance
+- feature parity with competitors
 
-## Release Standard
+---
 
-A change is not done unless the repo still supports:
+## 13. Adoption Constraints
+
+Changes must not:
+
+- require extra GitHub permissions
+- require changes to consumer workflow YAML
+
+---
+
+## 14. Repository Map
+
+(unchanged)
+
+---
+
+## 15. Release Standard
+
+Must pass:
 
 - `pnpm run check`
 - `pnpm run validate`
 - `pnpm run release-dry-run`
 
-Coverage is part of the contract. Do not weaken it casually.
+Coverage is required.
 
-## Agent Checklist Before Shipping
+---
 
-- Does the change strengthen the mission?
-- Is the MVP still the smallest useful version?
-- Are tests updated first or alongside the change?
-- Is config validation still strict and readable?
-- Is missing-config fallback still advisory-only?
-- Is the action still usable from another repository via `uses: failuresmith/github-policy-gate@v1`?
-- Are docs or examples updated if the user-facing behavior changed?
+## 16. Pre-Merge Gate
 
-## If You Are Unsure
+Must pass:
 
-Default to this sequence:
+- Acceptance Criteria satisfied
+- Determinism preserved (tests prove it)
+- No implicit behavior introduced
+- Docs updated if needed
 
-1. Read `README.md`
-2. Read the relevant module under `src/`
-3. Read the matching tests
-4. Add or update tests
-5. Make the smallest change that satisfies the tests
-6. Run the standard verification commands
+---
 
-Do not broaden scope just because an abstraction seems attractive.
+## 17. When Unsure
+
+1. Read README
+2. Read relevant module
+3. Read tests
+4. Update tests
+5. Make smallest change
+6. Run verification
+
+Do not expand scope.
